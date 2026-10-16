@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#fffdf9">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Tháng Mười Dịu Dàng — Gửi Min iu">
+    <meta property="og:description" content="Một món quà nhỏ 20/10 anh làm riêng cho em.">
+    <title>Tháng Mười Dịu Dàng — Gửi Min iu</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+
+    <!-- shortcut: Tailwind Play CDN dùng cho trang tĩnh nhỏ trên GitHub Pages, cần nâng cấp sang bản build CSS tĩnh khi lưu lượng truy cập lớn -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ivory: { 50: '#fffdf9', 100: '#fdf7f0', 200: '#f9ede0' },
+                        blush: { 50: '#fdf2f4', 100: '#fce4e8', 200: '#f9cbd3', 300: '#f4a3b4', 400: '#ec708d', 500: '#df486c' },
+                        rosegold: { light: '#f3d1c8', DEFAULT: '#d48778', dark: '#b56557', glow: '#ff9a8b' },
+                        wine: { light: '#7c3245', DEFAULT: '#561c2b', dark: '#380f1a' }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        script: ['"Dancing Script"', 'cursive'],
+                        sans: ['"Be Vietnam Pro"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root { --scroll-progress: 0%; }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #fffdf9 0%, #fdf2f4 55%, #fce4e8 100%);
+            color: #561c2b;
+            overflow-x: hidden;
+        }
+
+        #scroll-progress-bar {
+            position: fixed; top: 0; left: 0; height: 3.5px;
+            width: var(--scroll-progress);
+            background: linear-gradient(90deg, #f4a3b4 0%, #d48778 50%, #df486c 100%);
+            box-shadow: 0 1px 10px rgba(223, 72, 108, 0.45);
+            z-index: 9999;
+            transition: width 0.08s linear;
+            will-change: width;
+        }
+
+        /* Lớp kính mờ ở đỉnh trang: hiện khi cuộn xuống, nội dung trôi qua bị nhòe */
+        #top-glass {
+            position: fixed; top: 0; left: 0; right: 0; height: 84px;
+            z-index: 35; pointer-events: none; opacity: 0;
+            background: linear-gradient(to bottom, rgba(255,253,249,.88), rgba(255,253,249,0));
+            -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+                    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+            transition: opacity .4s ease;
+        }
+        body.scrolled #top-glass { opacity: 1; }
+
+        .scroll-blur { filter: blur(var(--sb, 0px)); }
+
+        #petals-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        #fx-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+
+        /* Hiện dần + mờ nhòe rồi nét lại khi cuộn tới */
+        .reveal-item, .reveal-left, .reveal-right {
+            opacity: 0;
+            filter: blur(14px);
+            transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+                        filter 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: opacity, transform, filter;
+        }
+        .reveal-item  { transform: translate3d(0, 44px, 0) scale(0.98); }
+        .reveal-left  { transform: translate3d(-40px, 20px, 0); }
+        .reveal-right { transform: translate3d(40px, 20px, 0); }
+        .reveal-item.is-visible, .reveal-left.is-visible, .reveal-right.is-visible {
+            opacity: 1;
+            filter: blur(0);
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+
+        .timeline-node {
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 0 0 rgba(223, 72, 108, 0);
+        }
+        /* Dùng thuộc tính `scale` riêng để không ghi đè translate của Tailwind (sửa lỗi lệch vòng số) */
+        .timeline-node.active-node {
+            background: linear-gradient(135deg, #df486c, #d48778);
+            color: #fff;
+            scale: 1.18;
+            box-shadow: 0 0 0 8px rgba(244,163,180,.35), 0 0 25px rgba(223,72,108,.5);
+        }
+
+        @keyframes floatSlow { 0%, 100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-10px,0); } }
+        .animate-float-slow { animation: floatSlow 5s ease-in-out infinite; }
+
+        @keyframes scrollWheel {
+            0% { transform: translate3d(0,0,0); opacity: 1; }
+            70% { transform: translate3d(0,10px,0); opacity: 0.2; }
+            100% { transform: translate3d(0,0,0); opacity: 0; }
+        }
+        .scroll-wheel-dot { animation: scrollWheel 2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+
+        #interactive-stage-wrapper { touch-action: none; user-select: none; -webkit-user-select: none; }
+
+        .glass-wish-card {
+            background: rgba(255, 253, 250, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 25px 60px -15px rgba(86, 28, 43, 0.18), 0 0 40px rgba(244, 163, 180, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+            opacity: 0;
+            transform: translate3d(0, 24px, 0) scale(0.86);
+            pointer-events: none;
+            transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1), transform 0.85s cubic-bezier(0.34, 1.45, 0.64, 1);
+            will-change: opacity, transform;
+        }
+        .glass-wish-card.card-visible { opacity: 1; transform: translate3d(0,0,0) scale(1); pointer-events: auto; }
+
+        .shimmer-border { position: relative; overflow: hidden; }
+        .shimmer-border::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            animation: sheen 6s infinite;
+            pointer-events: none;
+        }
+        @keyframes sheen { 0% { transform: translateX(-100%) rotate(30deg); } 25%, 100% { transform: translateX(100%) rotate(30deg); } }
+
+        .btn-luxury {
+            background: linear-gradient(135deg, #df486c 0%, #d48778 100%);
+            box-shadow: 0 10px 25px -5px rgba(223, 72, 108, 0.45);
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .btn-luxury:hover { transform: translate3d(0,-2px,0); box-shadow: 0 14px 30px -5px rgba(223, 72, 108, 0.6); }
+        .btn-luxury:active { transform: translate3d(0,0,0) scale(0.97); }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-blush-300 selection:text-white">
+
+    <div id="top-glass"></div>
+    <div id="scroll-progress-bar"></div>
+    <canvas id="petals-canvas"></canvas>
+    <canvas id="fx-canvas"></canvas>
+
+    <svg class="hidden" width="0" height="0" aria-hidden="true">
+        <defs>
+            <filter id="liquid-goo" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" result="goo" />
+                <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#df486c" flood-opacity="0.32" result="shadow"/>
+                <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+            </filter>
+            <filter id="petal-glow" x="-25%" y="-25%" width="150%" height="150%">
+                <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#8a2be2" flood-opacity="0.08"/>
+                <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#df486c" flood-opacity="0.22"/>
+            </filter>
+        </defs>
+    </svg>
+
+    <header class="fixed top-4 left-0 right-0 z-40 px-4 md:px-8 pointer-events-none">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="pointer-events-auto inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/75 backdrop-blur-md border border-blush-200/80 shadow-sm">
+                <span class="w-2.5 h-2.5 rounded-full bg-blush-500 animate-ping"></span>
+                <span class="text-xs font-semibold tracking-widest uppercase text-wine">20 . 10 • Tôn Vinh Phái Đẹp</span>
+            </div>
+            <div class="pointer-events-auto inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-blush-200/80 text-xs font-medium text-wine shadow-sm">
+                <span>💌 Gửi riêng: <strong id="header-recipient-name" class="text-blush-500 font-semibold">Min iu</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MÀN HÌNH 1 -->
+    <section class="relative min-h-screen w-full flex flex-col items-center justify-center px-6 pt-20 pb-16 z-10 overflow-hidden">
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] md:w-[560px] h-[340px] md:h-[560px] bg-gradient-to-tr from-blush-200/50 via-rosegold-light/40 to-ivory-100/30 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="scroll-blur max-w-3xl mx-auto text-center relative z-10 animate-float-slow">
+            <div class="inline-flex items-center gap-3 px-5 py-1.5 rounded-full bg-blush-100/80 border border-blush-200 text-wine-light text-xs md:text-sm tracking-[0.22em] uppercase font-medium mb-8 shadow-sm">
+                <span>✿</span>
+                <span>Lời Thì Thầm Của Mùa Thu</span>
+                <span>✿</span>
+            </div>
+
+            <h1 class="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold text-wine tracking-tight leading-[1.12] mb-6">
+                Tháng Mười <br class="sm:hidden">
+                <span class="font-script text-blush-500 font-bold text-6xl sm:text-7xl md:text-8xl lg:text-9xl block mt-2 drop-shadow-sm">
+                    Dịu Dàng
+                </span>
+            </h1>
+
+            <div class="flex items-center justify-center gap-4 my-7">
+                <span class="h-[1px] w-16 md:w-24 bg-gradient-to-r from-transparent to-rosegold"></span>
+                <span class="text-rosegold text-lg">❖</span>
+                <span class="h-[1px] w-16 md:w-24 bg-gradient-to-l from-transparent to-rosegold"></span>
+            </div>
+
+            <p class="font-serif italic text-lg sm:text-xl md:text-2xl text-wine-light/90 leading-relaxed max-w-2xl mx-auto px-2">
+                “Gió thu khẽ chạm qua hiên, và anh chợt nhớ ra mình có một người để thương, để nhớ, để nói lời cảm ơn…”
+            </p>
+
+            <p class="mt-6 text-sm md:text-base text-wine-light/70 font-normal">
+                Món quà nhỏ anh làm riêng cho <span class="recipient-inline font-semibold text-blush-500 underline decoration-blush-300 underline-offset-4">Min iu</span>, người con gái của anh
+            </p>
+        </div>
+
+        <a href="#story-timeline" aria-label="Cuộn xuống" class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-wine-light/75 hover:text-blush-500 transition-colors group cursor-pointer">
+            <span class="text-[11px] uppercase tracking-[0.25em] font-medium">Cuộn nhẹ xuống</span>
+            <div class="w-6 h-10 rounded-full border-2 border-rosegold/70 flex justify-center p-1 group-hover:border-blush-500 transition-colors bg-white/40 backdrop-blur-sm">
+                <span class="w-1.5 h-2 rounded-full bg-blush-500 scroll-wheel-dot"></span>
+            </div>
+        </a>
+    </section>
+
+    <!-- MÀN HÌNH 2: TIMELINE -->
+    <section id="story-timeline" class="relative py-24 md:py-36 px-4 sm:px-6 z-10">
+        <div class="scroll-blur max-w-5xl mx-auto">
+
+            <div class="reveal-item text-center max-w-2xl mx-auto mb-20 md:mb-28">
+                <span class="text-xs uppercase tracking-[0.25em] text-rosegold-dark font-semibold block mb-3">Điều Anh Muốn Nói</span>
+                <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-wine font-semibold leading-tight">
+                    Ba Điều Anh Luôn Trân Trọng Ở Em
+                </h2>
+                <p class="mt-4 text-wine-light/80 text-base md:text-lg">
+                    Cuộn từ từ nhé, mỗi đoạn là một lời anh chưa nói hết thành tiếng.
+                </p>
+            </div>
+
+            <div class="relative">
+                <div class="absolute left-6 md:left-1/2 top-4 bottom-4 -translate-x-1/2 w-[2px] bg-gradient-to-b from-blush-200 via-rosegold to-blush-300"></div>
+
+                <!-- 01 -->
+                <div class="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-32 items-center mb-24 md:mb-32 pl-20 md:pl-0">
+                    <div data-node="1" class="timeline-node absolute left-6 md:left-1/2 top-6 md:top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-ivory-50 border-2 border-rosegold flex items-center justify-center font-serif font-bold text-sm text-wine z-20">01</div>
+
+                    <div class="reveal-left md:text-right">
+                        <div class="inline-block px-3.5 py-1 rounded-full bg-blush-100 text-blush-500 text-xs font-semibold tracking-wider uppercase mb-3">Điều đầu tiên</div>
+                        <h3 class="font-serif text-2xl sm:text-3xl md:text-4xl text-wine font-semibold mb-4">Dịu dàng như sương sớm</h3>
+                        <p class="text-wine-light/90 text-base md:text-lg leading-relaxed">
+                            Anh thích cách em quan tâm anh bằng những điều rất nhỏ: một tin nhắn hỏi anh đã ăn chưa, một nụ cười làm hết mệt mỏi trong ngày. Bên em, mọi thứ bỗng chậm lại và bình yên.
+                        </p>
+                    </div>
+
+                    <div class="reveal-right">
+                        <div class="p-6 sm:p-8 rounded-3xl bg-white/75 backdrop-blur-md border border-blush-200/80 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-6">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl bg-gradient-to-br from-blush-100 to-blush-200 flex items-center justify-center shadow-inner">
+                                <svg class="w-10 h-10 text-blush-500" viewBox="0 0 64 64" fill="none">
+                                    <path d="M32 8C32 8 14 28 14 42C14 51.9411 22.0589 60 32 60C41.9411 60 50 51.9411 50 42C50 28 32 8 32 8Z" fill="url(#dropGrad1)" stroke="#df486c" stroke-width="2"/>
+                                    <path d="M24 38C22 43 25 49 30 51" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                                    <defs>
+                                        <linearGradient id="dropGrad1" x1="14" y1="8" x2="50" y2="60" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#f9cbd3"/><stop offset="1" stop-color="#ec708d"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-serif italic text-wine text-lg sm:text-xl mb-1">“Chỉ cần có em, ngày bình thường cũng thành ngày đẹp.”</p>
+                                <span class="text-xs uppercase tracking-widest text-rosegold-dark font-semibold">— Nét Dịu Dàng Của Em</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 02 -->
+                <div class="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-32 items-center mb-24 md:mb-32 pl-20 md:pl-0">
+                    <div data-node="2" class="timeline-node absolute left-6 md:left-1/2 top-6 md:top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-ivory-50 border-2 border-rosegold flex items-center justify-center font-serif font-bold text-sm text-wine z-20">02</div>
+
+                    <div class="reveal-left order-2 md:order-1">
+                        <div class="p-6 sm:p-8 rounded-3xl bg-white/75 backdrop-blur-md border border-blush-200/80 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-6">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl bg-gradient-to-br from-ivory-200 to-rosegold-light flex items-center justify-center shadow-inner">
+                                <svg class="w-10 h-10 text-rosegold-dark" viewBox="0 0 64 64" fill="none">
+                                    <circle cx="32" cy="32" r="14" fill="url(#sunGrad)" stroke="#b56557" stroke-width="2"/>
+                                    <path d="M32 8V14M32 50V56M8 32H14M50 32H56M15 15L19.5 19.5M44.5 44.5L49 49M49 15L44.5 19.5M19.5 44.5L15 49" stroke="#d48778" stroke-width="3" stroke-linecap="round"/>
+                                    <defs>
+                                        <linearGradient id="sunGrad" x1="18" y1="18" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#ffd2c2"/><stop offset="1" stop-color="#d48778"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-serif italic text-wine text-lg sm:text-xl mb-1">“Em mềm mại như nước, nhưng kiên cường như ánh mặt trời.”</p>
+                                <span class="text-xs uppercase tracking-widest text-rosegold-dark font-semibold">— Điều Anh Ngưỡng Mộ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reveal-right order-1 md:order-2">
+                        <div class="inline-block px-3.5 py-1 rounded-full bg-ivory-200 text-rosegold-dark text-xs font-semibold tracking-wider uppercase mb-3">Điều thứ hai</div>
+                        <h3 class="font-serif text-2xl sm:text-3xl md:text-4xl text-wine font-semibold mb-4">Mạnh mẽ tựa nắng mai</h3>
+                        <p class="text-wine-light/90 text-base md:text-lg leading-relaxed">
+                            Anh nể em vì dù bận rộn hay áp lực, em vẫn cố gắng hết mình và không bỏ cuộc. Anh luôn tự hào khi được đứng cạnh và nhìn em tỏa sáng theo cách của riêng em.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 03 -->
+                <div class="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-32 items-center pl-20 md:pl-0">
+                    <div data-node="3" class="timeline-node absolute left-6 md:left-1/2 top-6 md:top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-ivory-50 border-2 border-rosegold flex items-center justify-center font-serif font-bold text-sm text-wine z-20">03</div>
+
+                    <div class="reveal-left md:text-right">
+                        <div class="inline-block px-3.5 py-1 rounded-full bg-blush-100 text-blush-500 text-xs font-semibold tracking-wider uppercase mb-3">Điều anh mong</div>
+                        <h3 class="font-serif text-2xl sm:text-3xl md:text-4xl text-wine font-semibold mb-4">Đóa hoa mang tên Hạnh Phúc</h3>
+                        <p class="text-wine-light/90 text-base md:text-lg leading-relaxed">
+                            Anh mong em luôn được yêu thương, được chiều chuộng và được cười thật nhiều. Hôm nay, và cả những ngày sau, anh muốn là người ở bên cạnh nhìn em rạng rỡ như đóa hoa mùa thu.
+                        </p>
+                    </div>
+
+                    <div class="reveal-right">
+                        <div class="p-6 sm:p-8 rounded-3xl bg-white/75 backdrop-blur-md border border-blush-200/80 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-6">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl bg-gradient-to-br from-blush-200 to-rosegold-light flex items-center justify-center shadow-inner">
+                                <svg class="w-10 h-10 text-blush-500" viewBox="0 0 64 64" fill="none">
+                                    <path d="M32 12C37 20 44 20 48 16C46 24 50 30 54 32C48 36 46 42 48 48C40 46 36 50 32 54C28 50 24 46 16 48C18 42 16 36 10 32C14 30 18 24 16 16C20 20 27 20 32 12Z" fill="url(#flowerGrad)" stroke="#df486c" stroke-width="2"/>
+                                    <circle cx="32" cy="32" r="6" fill="#fffdf9"/>
+                                    <defs>
+                                        <linearGradient id="flowerGrad" x1="10" y1="12" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#f4a3b4"/><stop offset="1" stop-color="#df486c"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-serif italic text-wine text-lg sm:text-xl mb-1">“Được thương em là điều may mắn nhất của anh.”</p>
+                                <span class="text-xs uppercase tracking-widest text-rosegold-dark font-semibold">— Gửi Em, Người Anh Thương</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- MÀN HÌNH 3: GIỌT SƯƠNG -> HOA -->
+    <section id="interactive-flower-section" class="relative min-h-screen w-full flex flex-col items-center justify-center pt-24 pb-16 px-4 z-20 overflow-hidden">
+
+        <div class="max-w-xl w-full mx-auto text-center mb-4 z-30 pointer-events-none">
+            <span class="inline-block px-4 py-1 rounded-full bg-blush-100/90 border border-blush-200 text-blush-500 text-xs font-semibold uppercase tracking-[0.2em] mb-2">
+                Anh Giấu Một Điều Bất Ngờ
+            </span>
+            <h2 id="stage-headline" class="font-serif text-2xl sm:text-3xl md:text-4xl text-wine font-semibold transition-all duration-300">
+                Đánh Thức Đóa Hoa Tháng Mười
+            </h2>
+            <p id="stage-instruction" class="mt-2 text-sm sm:text-base text-wine-light/90 font-medium min-h-[2.75rem] flex items-center justify-center px-3 transition-all duration-300">
+                Hãy giữ và kéo giọt sương ra xa để xem anh giấu gì cho em nhé...
+            </p>
+
+            <div id="tension-meter-box" class="mt-3 max-w-xs mx-auto transition-opacity duration-500">
+                <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-wine-light mb-1.5 px-1">
+                    <span>Lực căng đàn hồi</span>
+                    <span id="tension-percent-text" class="text-blush-500 font-bold">0%</span>
+                </div>
+                <div class="w-full h-2.5 bg-white/80 rounded-full overflow-hidden border border-blush-200 p-0.5 shadow-inner">
+                    <div id="tension-bar-fill" class="h-full w-0 rounded-full bg-gradient-to-r from-blush-300 via-rosegold to-blush-500 transition-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="interactive-stage-wrapper" class="relative w-full max-w-[620px] aspect-square max-h-[600px] flex items-center justify-center mx-auto -mt-10">
+
+            <svg id="morph-svg" viewBox="0 0 600 600" role="button" tabindex="0" aria-label="Nhấn giữ và kéo giọt sương hoặc nhấn phím Enter để mở hoa nhận lời chúc" class="w-full h-full overflow-visible cursor-grab active:cursor-grabbing select-none focus:outline-none">
+                <defs>
+                    <radialGradient id="ruby-droplet-grad" cx="35%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#fff0f3" />
+                        <stop offset="28%" stop-color="#ff9ebb" />
+                        <stop offset="68%" stop-color="#df486c" />
+                        <stop offset="100%" stop-color="#9e2a47" />
+                    </radialGradient>
+                    <radialGradient id="petal-layer-1" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff" />
+                        <stop offset="55%" stop-color="#f9cbd3" />
+                        <stop offset="100%" stop-color="#df486c" />
+                    </radialGradient>
+                    <radialGradient id="petal-layer-2" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fff5f7" />
+                        <stop offset="50%" stop-color="#f4a3b4" />
+                        <stop offset="100%" stop-color="#c93b5b" />
+                    </radialGradient>
+                    <radialGradient id="petal-layer-3" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fffdf9" />
+                        <stop offset="60%" stop-color="#ffd2c2" />
+                        <stop offset="100%" stop-color="#d48778" />
+                    </radialGradient>
+                    <radialGradient id="stamen-glow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fffdf5" />
+                        <stop offset="50%" stop-color="#ffe5b4" />
+                        <stop offset="100%" stop-color="#e09f91" />
+                    </radialGradient>
+                </defs>
+
+                <g id="guide-rings-group" opacity="0.75">
+                    <circle id="target-ring" cx="300" cy="300" r="195" fill="none" stroke="#d48778" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.55" />
+                    <circle id="progress-ring" cx="300" cy="300" r="195" fill="none" stroke="#df486c" stroke-width="3" stroke-dasharray="1225" stroke-dashoffset="1225" stroke-linecap="round" transform="rotate(-90 300 300)" opacity="0.85" />
+                    <g id="drag-arrows-hint" opacity="0.65">
+                        <path d="M300 205 L300 175 M293 183 L300 175 L307 183" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M300 395 L300 425 M293 417 L300 425 L307 417" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M205 300 L175 300 M183 293 L175 300 L183 307" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M395 300 L425 300 M417 293 L425 300 L417 307" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </g>
+
+                <circle id="snap-shockwave" cx="300" cy="300" r="40" fill="none" stroke="#ff9ebb" stroke-width="4" opacity="0" />
+
+                <g id="flower-layers-group" filter="url(#petal-glow)" opacity="0">
+                    <path id="flower-layer-outer" fill="url(#petal-layer-1)" opacity="0.92" />
+                    <path id="flower-layer-mid" fill="url(#petal-layer-2)" opacity="0.95" />
+                    <path id="flower-layer-inner" fill="url(#petal-layer-3)" opacity="0.96" />
+                    <path id="flower-layer-core" fill="url(#stamen-glow)" opacity="0.98" />
+                </g>
+
+                <g id="liquid-goo-group" filter="url(#liquid-goo)">
+                    <path id="liquid-bridge" d="" fill="url(#ruby-droplet-grad)" />
+                    <circle id="anchor-blob" cx="300" cy="300" r="64" fill="url(#ruby-droplet-grad)" />
+                    <circle id="handle-blob" cx="300" cy="300" r="64" fill="url(#ruby-droplet-grad)" />
+                </g>
+
+                <g id="specular-group" pointer-events="none">
+                    <line id="tension-laser" x1="300" y1="300" x2="300" y2="300" stroke="#fffdf9" stroke-width="2" stroke-dasharray="4 6" opacity="0" />
+                    <ellipse id="handle-Highlight" cx="282" cy="280" rx="18" ry="10" transform="rotate(-30 282 280)" fill="rgba(255,255,255,0.65)" />
+                    <circle id="handle-dot" cx="270" cy="296" r="4" fill="rgba(255,255,255,0.5)" />
+                    <text id="droplet-label" x="300" y="305" text-anchor="middle" fill="#ffffff" font-family="Be Vietnam Pro, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5">KÉO TÔI</text>
+                </g>
+
+                <g id="bridge-sparkles-group" pointer-events="none"></g>
+            </svg>
+
+            <div id="wish-card" class="glass-wish-card shimmer-border absolute z-40 w-[92%] max-w-[440px] rounded-[2rem] p-6 sm:p-8 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blush-400 to-rosegold mx-auto mb-3 flex items-center justify-center text-white shadow-lg border-2 border-white">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+
+                <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-rosegold-dark block">
+                    Chúc Mừng Ngày Phụ Nữ Việt Nam 20/10
+                </span>
+
+                <h3 class="font-script text-4xl sm:text-5xl text-blush-500 font-bold mt-1 mb-4 drop-shadow-sm">
+                    Gửi <span class="recipient-inline">Min iu</span> của anh
+                </h3>
+
+                <p id="card-wish-message" class="font-serif italic text-base sm:text-lg text-wine leading-relaxed border-y border-blush-200/80 py-4 my-2"></p>
+
+                <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                    <button onclick="triggerHeartAndPetalBurst()" class="btn-luxury w-full sm:w-auto px-5 py-2.5 rounded-full text-white text-xs sm:text-sm font-semibold tracking-wide flex items-center justify-center gap-1.5">
+                        <span>Bắn thêm tim & hoa ✨</span>
+                    </button>
+                    <button onclick="resetInteractiveStage()" class="w-full sm:w-auto px-4 py-2.5 rounded-full bg-white hover:bg-blush-50 text-wine border border-blush-200 text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                        <span>Thử kéo lại giọt sương 🔄</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="quick-pull-helper" class="mt-2 text-center z-30">
+            <button onclick="autoSimulateStretchAndBloom()" class="text-xs text-wine-light/70 hover:text-blush-500 underline decoration-blush-200 underline-offset-4 transition-colors">
+                Hoặc nhấn vào đây nếu bạn muốn xem giọt sương tự kéo giãn & nở hoa ✨
+            </button>
+        </div>
+    </section>
+
+    <footer class="relative z-10 py-8 text-center text-xs text-wine-light/60 border-t border-blush-200/50">
+        <p>Thiết kế dành riêng cho Ngày Phụ Nữ Việt Nam 20/10 • Gửi trọn yêu thương đến người anh thương — <span class="recipient-inline font-semibold text-wine-light">Min iu</span></p>
+    </footer>
+
+    <script>
+        /* 1. CÁ NHÂN HÓA QUA URL: ?ten=Linh&tu=Nam&loichuc=... */
+        let currentRecipient = "Min iu";
+        let currentSender = "Anh";
+        let customWishText = "";
+
+        const INSTRUCTION_IDLE = 'Hãy giữ và kéo giọt sương ra xa để xem anh giấu gì cho em nhé...';
+        const HEADLINE_IDLE = 'Đánh Thức Đóa Hoa Tháng Mười';
+
+        function sanitizeParam(raw, maxLen) {
+            if (typeof raw !== 'string') return '';
+            return raw.replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, maxLen);
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+            });
+        }
+
+        function initRecipientFromURL() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const ten = sanitizeParam(params.get('ten') || params.get('name'), 45);
+                const tu  = sanitizeParam(params.get('tu') || params.get('from'), 30);
+                const loi = sanitizeParam(params.get('loichuc'), 320);
+                if (ten) currentRecipient = ten;
+                if (tu) currentSender = tu;
+                if (loi) customWishText = loi;
+                if (ten) document.title = `Tháng Mười Dịu Dàng — Gửi ${ten}`;
+            } catch (e) {}
+            updateRecipientDOM();
+        }
+
+        function updateRecipientDOM() {
+            document.querySelectorAll('.recipient-inline').forEach(n => { n.textContent = currentRecipient; });
+            const headerName = document.getElementById('header-recipient-name');
+            if (headerName) headerName.textContent = currentRecipient;
+
+            const wishEl = document.getElementById('card-wish-message');
+            if (!wishEl) return;
+            const sign = `<span class="block mt-3 not-italic text-sm text-rosegold-dark font-semibold">— ${escapeHTML(currentSender)} —</span>`;
+            if (customWishText) {
+                wishEl.innerHTML = `“${escapeHTML(customWishText)}”${sign}`;
+            } else {
+                wishEl.innerHTML = `“Chúc <span class="font-semibold not-italic text-blush-500">${escapeHTML(currentRecipient)}</span> của anh một ngày 20/10 thật ngọt ngào. Cảm ơn em vì đã đến bên anh, cùng anh đi qua những ngày vui lẫn ngày mệt. Anh thương em nhiều lắm!”${sign}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initRecipientFromURL);
+
+        /* 2. THANH TIẾN TRÌNH CUỘN + REVEAL */
+        let scrollTicking = false;
+        window.addEventListener('scroll', () => {
+            if (!scrollTicking) {
+                window.requestAnimationFrame(() => {
+                    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                    document.body.classList.toggle('scrolled', scrollTop > 30);
+                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    const progress = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
+                    document.documentElement.style.setProperty('--scroll-progress', `${progress}%`);
+                    scrollTicking = false;
+                });
+                scrollTicking = true;
+            }
+        }, { passive: true });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('is-visible'); });
+            }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.reveal-item, .reveal-left, .reveal-right').forEach(el => revealObserver.observe(el));
+
+            const nodeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active-node'); });
+            }, { threshold: 0.6 });
+            document.querySelectorAll('.timeline-node').forEach(node => nodeObserver.observe(node));
+        });
+
+        /* 3. CÁNH HOA RƠI NỀN */
+        const petalsCanvas = document.getElementById('petals-canvas');
+        const pCtx = petalsCanvas.getContext('2d');
+        let bgPetals = [];
+
+        function resizeCanvases() {
+            petalsCanvas.width = window.innerWidth;
+            petalsCanvas.height = window.innerHeight;
+            fxCanvas.width = window.innerWidth;
+            fxCanvas.height = window.innerHeight;
+        }
+
+        function createBgPetal() {
+            const count = window.innerWidth < 768 ? 18 : 30;
+            bgPetals = [];
+            for (let i = 0; i < count; i++) {
+                bgPetals.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    size: Math.random() * 9 + 6,
+                    speedY: Math.random() * 0.65 + 0.35,
+                    speedX: (Math.random() - 0.5) * 0.4,
+                    swayAmp: Math.random() * 0.8 + 0.3,
+                    swaySpeed: Math.random() * 0.02 + 0.01,
+                    angle: Math.random() * Math.PI * 2,
+                    spin: (Math.random() - 0.5) * 0.015,
+                    opacity: Math.random() * 0.38 + 0.18,
+                    hue: Math.random() > 0.5 ? '#f4a3b4' : '#ffd2c2'
+                });
+            }
+        }
+
+        function drawBgPetals(time) {
+            pCtx.clearRect(0, 0, petalsCanvas.width, petalsCanvas.height);
+            for (let i = 0; i < bgPetals.length; i++) {
+                const p = bgPetals[i];
+                p.y += p.speedY;
+                p.x += p.speedX + Math.sin(time * 0.001 + i) * p.swayAmp;
+                p.angle += p.spin;
+                if (p.y > petalsCanvas.height + 20) { p.y = -20; p.x = Math.random() * petalsCanvas.width; }
+                if (p.x > petalsCanvas.width + 20) p.x = -20;
+                if (p.x < -20) p.x = petalsCanvas.width + 20;
+
+                pCtx.save();
+                pCtx.translate(p.x, p.y);
+                pCtx.rotate(p.angle);
+                pCtx.globalAlpha = p.opacity;
+                pCtx.fillStyle = p.hue;
+                pCtx.beginPath();
+                pCtx.moveTo(0, -p.size);
+                pCtx.bezierCurveTo(p.size * 0.8, -p.size * 0.8, p.size * 0.9, p.size * 0.5, 0, p.size);
+                pCtx.bezierCurveTo(-p.size * 0.9, p.size * 0.5, -p.size * 0.8, -p.size * 0.8, 0, -p.size);
+                pCtx.fill();
+                pCtx.restore();
+            }
+        }
+
+        /* 4. PHÁO HOA / TIM / KIM TUYẾN */
+        const fxCanvas = document.getElementById('fx-canvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        let fxParticles = [];
+
+        function spawnCelebrationBurst(originX, originY, count = 65) {
+            const colors = ['#df486c', '#f4a3b4', '#d48778', '#ffd2c2', '#ff9ebb', '#f6c967'];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 9 + 2.5;
+                const typeRoll = Math.random();
+                fxParticles.push({
+                    x: originX, y: originY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - (Math.random() * 3 + 1),
+                    gravity: 0.14, drag: 0.985,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1,
+                    decay: Math.random() * 0.012 + 0.008,
+                    rotation: Math.random() * Math.PI * 2,
+                    spin: (Math.random() - 0.5) * 0.12,
+                    type: typeRoll < 0.45 ? 'heart' : (typeRoll < 0.8 ? 'petal' : 'sparkle')
+                });
+            }
+        }
+
+        function triggerHeartAndPetalBurst() {
+            const rect = document.getElementById('interactive-stage-wrapper').getBoundingClientRect();
+            spawnCelebrationBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, 75);
+        }
+
+        function updateAndDrawFxParticles() {
+            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            for (let i = fxParticles.length - 1; i >= 0; i--) {
+                const pt = fxParticles[i];
+                pt.vx *= pt.drag;
+                pt.vy = pt.vy * pt.drag + pt.gravity;
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.rotation += pt.spin;
+                pt.alpha -= pt.decay;
+                if (pt.alpha <= 0) { fxParticles.splice(i, 1); continue; }
+
+                fxCtx.save();
+                fxCtx.translate(pt.x, pt.y);
+                fxCtx.rotate(pt.rotation);
+                fxCtx.globalAlpha = Math.max(0, pt.alpha);
+                fxCtx.fillStyle = pt.color;
+
+                if (pt.type === 'heart') {
+                    const s = pt.size * 0.12;
+                    fxCtx.beginPath();
+                    fxCtx.moveTo(0, -3 * s);
+                    fxCtx.bezierCurveTo(-5 * s, -10 * s, -14 * s, -2 * s, 0, 9 * s);
+                    fxCtx.bezierCurveTo(14 * s, -2 * s, 5 * s, -10 * s, 0, -3 * s);
+                    fxCtx.fill();
+                } else if (pt.type === 'petal') {
+                    fxCtx.beginPath();
+                    fxCtx.ellipse(0, 0, pt.size * 0.55, pt.size, 0, 0, Math.PI * 2);
+                    fxCtx.fill();
+                } else {
+                    const r = pt.size * 0.8;
+                    fxCtx.beginPath();
+                    for (let j = 0; j < 4; j++) {
+                        const a = (j * Math.PI) / 2;
+                        fxCtx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                        const a2 = a + Math.PI / 4;
+                        fxCtx.lineTo(Math.cos(a2) * (r * 0.3), Math.sin(a2) * (r * 0.3));
+                    }
+                    fxCtx.closePath();
+                    fxCtx.fill();
+                }
+                fxCtx.restore();
+            }
+        }
+
+        /* 5. ENGINE KÉO GIÃN GIỌT SƯƠNG & NỞ HOA */
+        const svgStage = document.getElementById('morph-svg');
+        const anchorBlob = document.getElementById('anchor-blob');
+        const handleBlob = document.getElementById('handle-blob');
+        const liquidBridge = document.getElementById('liquid-bridge');
+        const handleHighlight = document.getElementById('handle-Highlight');
+        const handleDot = document.getElementById('handle-dot');
+        const dropletLabel = document.getElementById('droplet-label');
+        const tensionLaser = document.getElementById('tension-laser');
+        const progressRing = document.getElementById('progress-ring');
+        const dragArrowsHint = document.getElementById('drag-arrows-hint');
+        const guideRingsGroup = document.getElementById('guide-rings-group');
+        const bridgeSparklesGroup = document.getElementById('bridge-sparkles-group');
+        const snapShockwave = document.getElementById('snap-shockwave');
+
+        const flowerLayersGroup = document.getElementById('flower-layers-group');
+        const flowerLayerOuter = document.getElementById('flower-layer-outer');
+        const flowerLayerMid = document.getElementById('flower-layer-mid');
+        const flowerLayerInner = document.getElementById('flower-layer-inner');
+        const flowerLayerCore = document.getElementById('flower-layer-core');
+
+        const liquidGooGroup = document.getElementById('liquid-goo-group');
+        const specularGroup = document.getElementById('specular-group');
+
+        const tensionPercentText = document.getElementById('tension-percent-text');
+        const tensionBarFill = document.getElementById('tension-bar-fill');
+        const tensionMeterBox = document.getElementById('tension-meter-box');
+        const stageInstruction = document.getElementById('stage-instruction');
+        const stageHeadline = document.getElementById('stage-headline');
+        const wishCard = document.getElementById('wish-card');
+        const quickPullHelper = document.getElementById('quick-pull-helper');
+
+        const CENTER_X = 300;
+        const CENTER_Y = 300;
+        const MAX_PULL_DIST = 185;
+
+        // 'IDLE' | 'DRAGGING' | 'SPRING_RETURN' | 'SNAP_TO_BLOOM' | 'BLOOMING' | 'BLOOMED'
+        let stageState = 'IDLE';
+
+        let handleX = CENTER_X;
+        let handleY = CENTER_Y;
+        let velX = 0;
+        let velY = 0;
+        let currentTension = 0;
+
+        let bloomProgress = 0;
+        let flowerRotation = 0;
+        let shockwaveProgress = 0;
+
+        function clientToSVGCoords(clientX, clientY) {
+            const rect = svgStage.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left) * (600 / Math.max(1, rect.width)),
+                y: (clientY - rect.top) * (600 / Math.max(1, rect.height))
+            };
+        }
+
+        svgStage.addEventListener('pointerdown', (e) => {
+            if (stageState !== 'IDLE' && stageState !== 'SPRING_RETURN') return;
+            const pt = clientToSVGCoords(e.clientX, e.clientY);
+            const distFromHandle = Math.hypot(pt.x - handleX, pt.y - handleY);
+            const distFromCenter = Math.hypot(pt.x - CENTER_X, pt.y - CENTER_Y);
+            if (distFromHandle < 115 || distFromCenter < 115) {
+                stageState = 'DRAGGING';
+                velX = 0;
+                velY = 0;
+                svgStage.setPointerCapture(e.pointerId);
+                dragArrowsHint.style.opacity = '0';
+            }
+        });
+
+        svgStage.addEventListener('pointermove', (e) => {
+            if (stageState !== 'DRAGGING') return;
+            const pt = clientToSVGCoords(e.clientX, e.clientY);
+            const dx = pt.x - CENTER_X;
+            const dy = pt.y - CENTER_Y;
+            const rawDist = Math.hypot(dx, dy);
+            const angle = Math.atan2(dy, dx);
+            const dampedDist = MAX_PULL_DIST * 1.16 * (1 - Math.exp(-rawDist / 165));
+
+            handleX = CENTER_X + Math.cos(angle) * dampedDist;
+            handleY = CENTER_Y + Math.sin(angle) * dampedDist;
+            currentTension = Math.min(1, dampedDist / MAX_PULL_DIST);
+
+            if (currentTension >= 0.99) {
+                handleX += (Math.random() - 0.5) * 4.5;
+                handleY += (Math.random() - 0.5) * 4.5;
+            }
+        });
+
+        function handlePointerRelease(e) {
+            if (stageState !== 'DRAGGING') return;
+            try {
+                if (e && e.pointerId !== undefined) svgStage.releasePointerCapture(e.pointerId);
+            } catch (err) {}
+
+            if (currentTension >= 0.96) {
+                stageState = 'SNAP_TO_BLOOM';
+                stageInstruction.innerHTML = `<span class="text-blush-500 font-bold">✨ Điều anh giấu đang bung nở... ✨</span>`;
+            } else {
+                stageState = 'SPRING_RETURN';
+                const pct = Math.round(currentTension * 100);
+                if (pct > 12) {
+                    stageInstruction.innerHTML = `Mới đạt <strong class="text-blush-500">${pct}%</strong> lực căng thôi! Kéo giọt sương ra tới vòng tròn nét đứt nhé ✨`;
+                } else {
+                    stageInstruction.textContent = INSTRUCTION_IDLE;
+                }
+                dragArrowsHint.style.opacity = '0.65';
+            }
+        }
+
+        svgStage.addEventListener('pointerup', handlePointerRelease);
+        svgStage.addEventListener('pointercancel', handlePointerRelease);
+
+        svgStage.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && stageState === 'IDLE') {
+                e.preventDefault();
+                autoSimulateStretchAndBloom();
+            }
+        });
+
+        function updateLiquidMetaball(time) {
+            const dx = handleX - CENTER_X;
+            const dy = handleY - CENTER_Y;
+            const d = Math.hypot(dx, dy);
+
+            const breath = stageState === 'IDLE' ? Math.sin(time * 0.0035) * 3.5 : 0;
+            const r1 = Math.max(30, 64 - currentTension * 28 + breath);
+            const r2 = Math.max(28, 62 - currentTension * 26 - breath * 0.5);
+
+            anchorBlob.setAttribute('cx', CENTER_X);
+            anchorBlob.setAttribute('cy', CENTER_Y);
+            anchorBlob.setAttribute('r', r1.toFixed(2));
+
+            handleBlob.setAttribute('cx', handleX.toFixed(2));
+            handleBlob.setAttribute('cy', handleY.toFixed(2));
+            handleBlob.setAttribute('r', r2.toFixed(2));
+
+            handleHighlight.setAttribute('cx', (handleX - 18).toFixed(2));
+            handleHighlight.setAttribute('cy', (handleY - 20).toFixed(2));
+            handleHighlight.setAttribute('transform', `rotate(-30 ${(handleX - 18).toFixed(2)} ${(handleY - 20).toFixed(2)})`);
+            handleDot.setAttribute('cx', (handleX - 28).toFixed(2));
+            handleDot.setAttribute('cy', (handleY - 4).toFixed(2));
+
+            dropletLabel.setAttribute('x', handleX.toFixed(2));
+            dropletLabel.setAttribute('y', (handleY + 5).toFixed(2));
+            dropletLabel.textContent = currentTension >= 0.96 ? 'THẢ TAY!' : (currentTension > 0.1 ? `${Math.round(currentTension * 100)}%` : 'KÉO TÔI');
+
+            if (d > 25) {
+                tensionLaser.setAttribute('x1', CENTER_X);
+                tensionLaser.setAttribute('y1', CENTER_Y);
+                tensionLaser.setAttribute('x2', handleX.toFixed(2));
+                tensionLaser.setAttribute('y2', handleY.toFixed(2));
+                tensionLaser.setAttribute('opacity', (currentTension * 0.75).toFixed(2));
+            } else {
+                tensionLaser.setAttribute('opacity', '0');
+            }
+
+            if (d > 8) {
+                const angle = Math.atan2(dy, dx);
+                const sinA = Math.sin(angle);
+                const cosA = Math.cos(angle);
+                const spread1 = r1 * 0.85;
+                const spread2 = r2 * 0.85;
+
+                const p1x = CENTER_X - sinA * spread1, p1y = CENTER_Y + cosA * spread1;
+                const p2x = handleX - sinA * spread2, p2y = handleY + cosA * spread2;
+                const p3x = handleX + sinA * spread2, p3y = handleY - cosA * spread2;
+                const p4x = CENTER_X + sinA * spread1, p4y = CENTER_Y - cosA * spread1;
+
+                const midX = (CENTER_X + handleX) * 0.5;
+                const midY = (CENTER_Y + handleY) * 0.5;
+                const waistRadius = Math.max(4, (r1 + r2) * 0.42 * (1 - currentTension * 0.82));
+
+                const ctrl1x = midX - sinA * waistRadius, ctrl1y = midY + cosA * waistRadius;
+                const ctrl2x = midX + sinA * waistRadius, ctrl2y = midY - cosA * waistRadius;
+
+                liquidBridge.setAttribute('d', `M ${p1x.toFixed(1)} ${p1y.toFixed(1)} Q ${ctrl1x.toFixed(1)} ${ctrl1y.toFixed(1)} ${p2x.toFixed(1)} ${p2y.toFixed(1)} L ${p3x.toFixed(1)} ${p3y.toFixed(1)} Q ${ctrl2x.toFixed(1)} ${ctrl2y.toFixed(1)} ${p4x.toFixed(1)} ${p4y.toFixed(1)} Z`);
+            } else {
+                liquidBridge.setAttribute('d', '');
+            }
+
+            const pct = Math.min(100, Math.round(currentTension * 100));
+            tensionPercentText.textContent = `${pct}%`;
+            tensionBarFill.style.width = `${pct}%`;
+            progressRing.setAttribute('stroke-dashoffset', (1225 * (1 - currentTension)).toFixed(1));
+
+            if (stageState === 'DRAGGING') {
+                if (pct >= 96) {
+                    stageInstruction.innerHTML = `<span class="text-blush-500 font-bold animate-pulse">Đủ lực rồi (100%)! Thả tay ra nhé ✨</span>`;
+                } else {
+                    stageInstruction.innerHTML = `Đang kéo giãn giọt sương... <strong class="text-blush-500">${pct}%</strong> (Kéo chạm vòng tròn ngoài để đạt 100%)`;
+                }
+            }
+
+            renderBridgeSparkles(d, time);
+        }
+
+        function renderBridgeSparkles(distance, time) {
+            if (distance < 35 || (stageState !== 'DRAGGING' && stageState !== 'SNAP_TO_BLOOM')) {
+                bridgeSparklesGroup.innerHTML = '';
+                return;
+            }
+            const sparkleCount = Math.floor(currentTension * 7) + 2;
+            let svgContent = '';
+            for (let i = 1; i <= sparkleCount; i++) {
+                const t = i / (sparkleCount + 1);
+                const sx = CENTER_X + (handleX - CENTER_X) * t + Math.sin(time * 0.01 + i * 2) * 8;
+                const sy = CENTER_Y + (handleY - CENTER_Y) * t + Math.cos(time * 0.01 + i * 2) * 8;
+                const r = (Math.sin(time * 0.015 + i) + 1.5) * 2.2;
+                svgContent += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${r.toFixed(1)}" fill="#fffdf9" opacity="0.85" />`;
+            }
+            bridgeSparklesGroup.innerHTML = svgContent;
+        }
+
+        // shortcut: 120 bước chia đường cong cực cho viewBox 600x600, cần nâng cấp lên nội suy Bezier nếu phóng to trên 1200px
+        function generatePolarFlowerPath(cx, cy, baseRadius, petalAmp, petalCount, morphT, phaseAngle, sharpness = 1.4) {
+            const steps = 120;
+            let d = '';
+            for (let i = 0; i <= steps; i++) {
+                const theta = (i / steps) * Math.PI * 2;
+                const petalWave = Math.pow(Math.abs(Math.sin((petalCount * (theta + phaseAngle)) / 2)), sharpness);
+                const secondaryWave = 0.18 * Math.cos(petalCount * (theta + phaseAngle));
+                const currentR = baseRadius * (0.35 + 0.65 * morphT) + morphT * petalAmp * (petalWave + secondaryWave);
+                const x = cx + currentR * Math.cos(theta);
+                const y = cy + currentR * Math.sin(theta);
+                d += (i === 0 ? `M ${x.toFixed(2)} ${y.toFixed(2)}` : ` L ${x.toFixed(2)} ${y.toFixed(2)}`);
+            }
+            return d + ' Z';
+        }
+
+        function easeOutBack(x) {
+            const c1 = 1.70158;
+            const c3 = c1 + 1;
+            return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+        }
+
+        function updateFlowerMorphLayers() {
+            const easedT = Math.min(1.08, easeOutBack(Math.min(1, bloomProgress)));
+            flowerLayerOuter.setAttribute('d', generatePolarFlowerPath(CENTER_X, CENTER_Y, 130, 125, 8, easedT, flowerRotation * 0.6, 1.3));
+            flowerLayerMid.setAttribute('d', generatePolarFlowerPath(CENTER_X, CENTER_Y, 100, 95, 10, easedT, -flowerRotation * 0.8 + 0.35, 1.5));
+            flowerLayerInner.setAttribute('d', generatePolarFlowerPath(CENTER_X, CENTER_Y, 72, 68, 8, easedT, flowerRotation * 1.1 + 0.7, 1.4));
+            flowerLayerCore.setAttribute('d', generatePolarFlowerPath(CENTER_X, CENTER_Y, 40, 26, 12, easedT, -flowerRotation * 1.4, 1.8));
+        }
+
+        // Blur theo tốc độ cuộn: lăn nhanh thì nhòe, dừng lại thì nét dần
+        let lastScrollY = window.scrollY, blurAmt = 0;
+        const blurEls = document.querySelectorAll('.scroll-blur');
+        // Cuộn neo: mỗi nấc lăn chuột nhảy tới phần neo kế tiếp (đầu nhanh, cuối chậm)
+        let wheelTarget = window.scrollY, wheelCurrent = window.scrollY, lastFrameT = 0, wheelLockUntil = 0;
+
+        function getAnchors() {
+            const sy = window.scrollY, vh = window.innerHeight;
+            const max = document.documentElement.scrollHeight - vh;
+            const top = el => el.getBoundingClientRect().top + sy;
+            const list = [0, top(document.getElementById('story-timeline'))];
+            document.querySelectorAll('.timeline-node').forEach(n => {
+                const row = n.parentElement;
+                list.push(top(row) - Math.max(0, (vh - row.offsetHeight) / 2));
+            });
+            list.push(top(document.getElementById('interactive-flower-section')), max);
+            return [...new Set(list.map(v => Math.round(Math.min(max, Math.max(0, v)))))].sort((x, y) => x - y);
+        }
+
+        window.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+            if (!(e.deltaMode === 1 || Math.abs(e.deltaY) >= 50)) return; // bỏ qua touchpad
+            e.preventDefault();
+            if (performance.now() < wheelLockUntil) return; // mỗi lần lăn chỉ nhảy 1 neo
+            const anchors = getAnchors();
+            const y = window.scrollY;
+            const next = e.deltaY > 0 ? anchors.find(v => v > y + 10) : [...anchors].reverse().find(v => v < y - 10);
+            if (next === undefined) return;
+            wheelCurrent = y;
+            wheelTarget = next;
+            wheelLockUntil = performance.now() + 650;
+        }, { passive: false });
+
+        function stepWheelScroll(time) {
+            const dt = Math.min(50, time - lastFrameT || 16);
+            lastFrameT = time;
+            if (Math.abs(wheelTarget - wheelCurrent) > 0.5) {
+                wheelCurrent += (wheelTarget - wheelCurrent) * (1 - Math.exp(-dt / 260));
+                window.scrollTo({ top: wheelCurrent, behavior: 'instant' });
+            } else {
+                // đồng bộ lại khi người dùng cuộn bằng cách khác (phím, kéo thanh cuộn, bấm link)
+                wheelTarget = wheelCurrent = window.scrollY;
+            }
+        }
+
+        function updateScrollBlur() {
+            const y = window.scrollY;
+            const target = Math.min(1, Math.abs(y - lastScrollY) * 0.14);
+            lastScrollY = y;
+            blurAmt += (target - blurAmt) * 0.12;
+            const v = blurAmt < 0.05 ? '0px' : blurAmt.toFixed(2) + 'px';
+            blurEls.forEach(el => el.style.setProperty('--sb', v));
+        }
+
+        function masterAnimationLoop(time) {
+            stepWheelScroll(time);
+            updateScrollBlur();
+            drawBgPetals(time);
+            updateAndDrawFxParticles();
+
+            if (stageState === 'IDLE' || stageState === 'DRAGGING') {
+                updateLiquidMetaball(time);
+            }
+            else if (stageState === 'SPRING_RETURN') {
+                const stiffness = 0.16;
+                const damping = 0.78;
+                velX = (velX + (CENTER_X - handleX) * stiffness) * damping;
+                velY = (velY + (CENTER_Y - handleY) * stiffness) * damping;
+                handleX += velX;
+                handleY += velY;
+
+                const dist = Math.hypot(handleX - CENTER_X, handleY - CENTER_Y);
+                currentTension = Math.min(1, dist / MAX_PULL_DIST);
+                updateLiquidMetaball(time);
+
+                if (dist < 0.8 && Math.hypot(velX, velY) < 0.4) {
+                    handleX = CENTER_X;
+                    handleY = CENTER_Y;
+                    currentTension = 0;
+                    stageState = 'IDLE';
+                }
+            }
+            else if (stageState === 'SNAP_TO_BLOOM') {
+                const stiffness = 0.28;
+                const damping = 0.65;
+                velX = (velX + (CENTER_X - handleX) * stiffness) * damping;
+                velY = (velY + (CENTER_Y - handleY) * stiffness) * damping;
+                handleX += velX;
+                handleY += velY;
+
+                const dist = Math.hypot(handleX - CENTER_X, handleY - CENTER_Y);
+                currentTension = Math.min(1, dist / MAX_PULL_DIST);
+                updateLiquidMetaball(time);
+
+                if (dist < 18) {
+                    handleX = CENTER_X;
+                    handleY = CENTER_Y;
+                    currentTension = 0;
+                    stageState = 'BLOOMING';
+                    bloomProgress = 0.02;
+                    shockwaveProgress = 0.01;
+
+                    liquidGooGroup.style.transition = 'opacity 0.35s ease';
+                    liquidGooGroup.style.opacity = '0';
+                    specularGroup.style.opacity = '0';
+                    guideRingsGroup.style.opacity = '0';
+                    tensionMeterBox.style.display = 'none';
+                    if (quickPullHelper) quickPullHelper.style.display = 'none';
+
+                    flowerLayersGroup.setAttribute('opacity', '1');
+                    triggerHeartAndPetalBurst();
+                }
+            }
+            else if (stageState === 'BLOOMING') {
+                bloomProgress += 0.018;
+                flowerRotation += 0.005;
+                updateFlowerMorphLayers();
+
+                if (shockwaveProgress > 0 && shockwaveProgress < 1) {
+                    shockwaveProgress += 0.03;
+                    snapShockwave.setAttribute('r', (40 + shockwaveProgress * 220).toFixed(1));
+                    snapShockwave.setAttribute('opacity', (1 - shockwaveProgress).toFixed(2));
+                }
+
+                if (bloomProgress >= 0.72 && !wishCard.classList.contains('card-visible')) {
+                    wishCard.classList.add('card-visible');
+                    stageHeadline.textContent = `Đóa Hoa Dành Riêng Cho Em Đã Nở`;
+                    stageInstruction.innerHTML = `Những điều ngọt ngào nhất anh dành cho <strong class="text-blush-500 ml-1">${escapeHTML(currentRecipient)}</strong> 💖`;
+                }
+
+                if (bloomProgress >= 1) {
+                    bloomProgress = 1;
+                    stageState = 'BLOOMED';
+                }
+            }
+            else if (stageState === 'BLOOMED') {
+                flowerRotation += 0.0025;
+                updateFlowerMorphLayers();
+            }
+
+            window.requestAnimationFrame(masterAnimationLoop);
+        }
+
+        /* 6. RESET & TỰ ĐỘNG KÉO */
+        function resetInteractiveStage() {
+            wishCard.classList.remove('card-visible');
+            flowerLayersGroup.setAttribute('opacity', '0');
+
+            liquidGooGroup.style.opacity = '1';
+            specularGroup.style.opacity = '1';
+            guideRingsGroup.style.opacity = '0.75';
+            dragArrowsHint.style.opacity = '0.65';
+            tensionMeterBox.style.display = '';
+            if (quickPullHelper) quickPullHelper.style.display = '';
+
+            handleX = CENTER_X;
+            handleY = CENTER_Y;
+            velX = 0;
+            velY = 0;
+            currentTension = 0;
+            bloomProgress = 0;
+            shockwaveProgress = 0;
+            snapShockwave.setAttribute('opacity', '0');
+
+            stageHeadline.textContent = HEADLINE_IDLE;
+            stageInstruction.textContent = INSTRUCTION_IDLE;
+            stageState = 'IDLE';
+        }
+
+        function autoSimulateStretchAndBloom() {
+            if (stageState !== 'IDLE') resetInteractiveStage();
+            stageState = 'DRAGGING';
+            dragArrowsHint.style.opacity = '0';
+
+            let simStep = 0;
+            const simInterval = setInterval(() => {
+                simStep += 0.04;
+                const pullDist = Math.min(MAX_PULL_DIST * 1.04, simStep * MAX_PULL_DIST * 1.05);
+                const angle = Math.PI * 0.28;
+                handleX = CENTER_X + Math.cos(angle) * pullDist;
+                handleY = CENTER_Y + Math.sin(angle) * pullDist;
+                currentTension = Math.min(1, pullDist / MAX_PULL_DIST);
+
+                if (simStep >= 1.1) {
+                    clearInterval(simInterval);
+                    handlePointerRelease();
+                }
+            }, 22);
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+        window.onload = function () {
+            resizeCanvases();
+            createBgPetal();
+            window.requestAnimationFrame(masterAnimationLoop);
+        };
+    </script>
+</body>
+</html>
