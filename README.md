@@ -5,7 +5,7 @@ Món quà nhỏ 20/10 gửi người thương: một trang web tĩnh với giọ
 ## Xem trang
 
 ```
-https://<tên-github>.github.io/<tên-repo>/main.html
+[https://<tên-github>.github.io/<tên-repo>/index.html](https://nguyennhan209.github.io/thang-muoi-diu-dang/)
 ```
 
 Thay `<tên-github>` và `<tên-repo>` bằng tên của bạn. Vì file là `main.html` (không phải `index.html`), link **phải có `/main.html`** ở cuối, nếu không sẽ bị lỗi 404.
