@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#fffdf9">
+    <meta name="theme-color" content="#2a0a24">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Tháng Mười Dịu Dàng — Gửi Min iu">
     <meta property="og:description" content="Một món quà nhỏ 20/10 anh làm riêng cho em.">
@@ -20,10 +20,10 @@
             theme: {
                 extend: {
                     colors: {
-                        ivory: { 50: '#fffdf9', 100: '#fdf7f0', 200: '#f9ede0' },
-                        blush: { 50: '#fdf2f4', 100: '#fce4e8', 200: '#f9cbd3', 300: '#f4a3b4', 400: '#ec708d', 500: '#df486c' },
-                        rosegold: { light: '#f3d1c8', DEFAULT: '#d48778', dark: '#b56557', glow: '#ff9a8b' },
-                        wine: { light: '#7c3245', DEFAULT: '#561c2b', dark: '#380f1a' }
+                        ivory: { 50: '#3a0f33', 100: '#2f0c2a', 200: '#4a1a40' },
+                        blush: { 50: '#3a0f33', 100: '#5a1a4c', 200: '#7a2a66', 300: '#ff9ec8', 400: '#ff6fae', 500: '#ff6fae' },
+                        rosegold: { light: '#7a2a66', DEFAULT: '#ff9ec8', dark: '#ffd9a8', glow: '#ff9a8b' },
+                        wine: { light: '#ffc2dc', DEFAULT: '#fff1f6', dark: '#2a0a24' }
                     },
                     fontFamily: {
                         serif: ['"Playfair Display"', 'serif'],
@@ -41,8 +41,8 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: radial-gradient(circle at 50% 0%, #fffdf9 0%, #fdf2f4 55%, #fce4e8 100%);
-            color: #561c2b;
+            background: radial-gradient(circle at 50% 30%, #4a1240, #2a0a24 70%) fixed;
+            color: #fff1f6;
             overflow-x: hidden;
         }
 
@@ -60,7 +60,7 @@
         #top-glass {
             position: fixed; top: 0; left: 0; right: 0; height: 84px;
             z-index: 35; pointer-events: none; opacity: 0;
-            background: linear-gradient(to bottom, rgba(255,253,249,.88), rgba(255,253,249,0));
+            background: linear-gradient(to bottom, rgba(42,10,36,.85), rgba(42,10,36,0));
             -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
             -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
                     mask-image: linear-gradient(to bottom, #000 55%, transparent);
@@ -69,6 +69,55 @@
         body.scrolled #top-glass { opacity: 1; }
 
         .scroll-blur { filter: blur(var(--sb, 0px)); }
+
+        /* Theme tối: kính mờ, quầng sáng, sao lấp lánh, chữ ánh kim */
+        [class*="bg-white"] { background-color: rgba(255,255,255,.08) !important; }
+        h1 .font-script { text-shadow: 0 0 30px #ff3d84; }
+        .shimmer-text {
+            background: linear-gradient(90deg, #ff9ec8, #fff, #ffd9a8, #ff6fae, #ff9ec8) 0 0 / 250% 100%;
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent !important;
+            animation: shimmerText 5s linear infinite;
+        }
+        @keyframes shimmerText { to { background-position: -250% 0; } }
+        .glow { position: fixed; border-radius: 50%; filter: blur(80px); opacity: .35; pointer-events: none; z-index: 0; }
+        .g1 { width: 50vmax; height: 50vmax; background: #ff2d8a; left: -15vmax; top: -10vmax; }
+        .g2 { width: 40vmax; height: 40vmax; background: #8a3dff; right: -12vmax; bottom: -10vmax; }
+        .star { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff; pointer-events: none; z-index: 0; animation: tw 3s infinite alternate; }
+        @keyframes tw { from { opacity: .1; } to { opacity: .9; box-shadow: 0 0 8px #fff; } }
+
+        /* ===== Tối ưu điện thoại ===== */
+        @supports (height: 100dvh) { section.min-h-screen { min-height: 100dvh; } }
+        header.fixed { top: calc(env(safe-area-inset-top, 0px) + 1rem); }
+        #header-recipient-name { display: inline-block; max-width: 32vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+        #quick-pull-helper button { padding: .75rem .5rem; }
+
+        @media (max-width: 767px) {
+            .reveal-left, .reveal-right { transform: translate3d(0, 30px, 0); }
+            #wish-card { padding: 1.25rem 1rem; }
+        }
+        /* Màn hình cảm ứng: bỏ các hiệu ứng nặng (blur nền, blur khi cuộn) cho mượt */
+        @media (hover: none) {
+            .scroll-blur { filter: none !important; }
+            .reveal-item, .reveal-left, .reveal-right { filter: blur(6px); }
+            .backdrop-blur-md, .backdrop-blur-sm { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+            .glow { filter: blur(50px); }
+        }
+
+        /* Nút "xuống tiếp" chỉ có trên điện thoại */
+        #next-btn {
+            display: none; position: fixed; z-index: 50;
+            right: 1rem; bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+            width: 3rem; height: 3rem; border: 0; border-radius: 50%;
+            align-items: center; justify-content: center; color: #fff;
+            background: linear-gradient(135deg, #ff6fae, #ff3d84);
+            box-shadow: 0 0 22px rgba(255, 61, 132, .6);
+        }
+        #next-btn:active { transform: scale(.92); }
+        #next-btn svg { width: 1.4rem; height: 1.4rem; transition: transform .4s; animation: nextBob 1.6s ease-in-out infinite; }
+        #next-btn.is-last svg { transform: rotate(180deg); }
+        @keyframes nextBob { 50% { translate: 0 3px; } }
+        @media (hover: none) { #next-btn { display: flex; } }
 
         #petals-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         #fx-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
@@ -97,10 +146,10 @@
         }
         /* Dùng thuộc tính `scale` riêng để không ghi đè translate của Tailwind (sửa lỗi lệch vòng số) */
         .timeline-node.active-node {
-            background: linear-gradient(135deg, #df486c, #d48778);
+            background: linear-gradient(135deg, #ff3d84, #ff6fae);
             color: #fff;
             scale: 1.18;
-            box-shadow: 0 0 0 8px rgba(244,163,180,.35), 0 0 25px rgba(223,72,108,.5);
+            box-shadow: 0 0 0 8px rgba(255,111,174,.3), 0 0 28px rgba(255,61,132,.65);
         }
 
         @keyframes floatSlow { 0%, 100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-10px,0); } }
@@ -113,14 +162,14 @@
         }
         .scroll-wheel-dot { animation: scrollWheel 2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
 
-        #interactive-stage-wrapper { touch-action: none; user-select: none; -webkit-user-select: none; }
+        #interactive-stage-wrapper { user-select: none; -webkit-user-select: none; }
 
         .glass-wish-card {
-            background: rgba(255, 253, 250, 0.82);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1.5px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 25px 60px -15px rgba(86, 28, 43, 0.18), 0 0 40px rgba(244, 163, 180, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+            background: linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,.04));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 182, 213, 0.4);
+            box-shadow: 0 25px 90px rgba(255, 61, 132, 0.35), inset 0 0 40px rgba(255, 150, 200, 0.08);
             opacity: 0;
             transform: translate3d(0, 24px, 0) scale(0.86);
             pointer-events: none;
@@ -140,8 +189,8 @@
         @keyframes sheen { 0% { transform: translateX(-100%) rotate(30deg); } 25%, 100% { transform: translateX(100%) rotate(30deg); } }
 
         .btn-luxury {
-            background: linear-gradient(135deg, #df486c 0%, #d48778 100%);
-            box-shadow: 0 10px 25px -5px rgba(223, 72, 108, 0.45);
+            background: linear-gradient(135deg, #ff6fae, #ff3d84);
+            box-shadow: 0 0 28px rgba(255, 61, 132, 0.55);
             transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .btn-luxury:hover { transform: translate3d(0,-2px,0); box-shadow: 0 14px 30px -5px rgba(223, 72, 108, 0.6); }
@@ -150,7 +199,10 @@
 </head>
 <body class="font-sans antialiased selection:bg-blush-300 selection:text-white">
 
+    <div class="glow g1"></div>
+    <div class="glow g2"></div>
     <div id="top-glass"></div>
+    <button id="next-btn" aria-label="Xuống phần tiếp theo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
     <div id="scroll-progress-bar"></div>
     <canvas id="petals-canvas"></canvas>
     <canvas id="fx-canvas"></canvas>
@@ -174,7 +226,7 @@
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="pointer-events-auto inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/75 backdrop-blur-md border border-blush-200/80 shadow-sm">
                 <span class="w-2.5 h-2.5 rounded-full bg-blush-500 animate-ping"></span>
-                <span class="text-xs font-semibold tracking-widest uppercase text-wine">20 . 10 • Tôn Vinh Phái Đẹp</span>
+                <span class="text-xs font-semibold tracking-widest uppercase text-wine">20 . 10<span class="hidden sm:inline"> • Tôn Vinh Phái Đẹp</span></span>
             </div>
             <div class="pointer-events-auto inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-blush-200/80 text-xs font-medium text-wine shadow-sm">
                 <span>💌 Gửi riêng: <strong id="header-recipient-name" class="text-blush-500 font-semibold">Min iu</strong></span>
@@ -368,7 +420,7 @@
             </div>
         </div>
 
-        <div id="interactive-stage-wrapper" class="relative w-full max-w-[620px] aspect-square max-h-[600px] flex items-center justify-center mx-auto -mt-10">
+        <div id="interactive-stage-wrapper" class="relative w-full max-w-[620px] aspect-square max-h-[600px] flex items-center justify-center mx-auto mt-8 sm:-mt-10">
 
             <svg id="morph-svg" viewBox="0 0 600 600" role="button" tabindex="0" aria-label="Nhấn giữ và kéo giọt sương hoặc nhấn phím Enter để mở hoa nhận lời chúc" class="w-full h-full overflow-visible cursor-grab active:cursor-grabbing select-none focus:outline-none">
                 <defs>
@@ -401,13 +453,13 @@
                 </defs>
 
                 <g id="guide-rings-group" opacity="0.75">
-                    <circle id="target-ring" cx="300" cy="300" r="195" fill="none" stroke="#d48778" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.55" />
+                    <circle id="target-ring" cx="300" cy="300" r="195" fill="none" stroke="#ff9ec8" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.55" />
                     <circle id="progress-ring" cx="300" cy="300" r="195" fill="none" stroke="#df486c" stroke-width="3" stroke-dasharray="1225" stroke-dashoffset="1225" stroke-linecap="round" transform="rotate(-90 300 300)" opacity="0.85" />
                     <g id="drag-arrows-hint" opacity="0.65">
-                        <path d="M300 205 L300 175 M293 183 L300 175 L307 183" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M300 395 L300 425 M293 417 L300 425 L307 417" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M205 300 L175 300 M183 293 L175 300 L183 307" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M395 300 L425 300 M417 293 L425 300 L417 307" stroke="#b56557" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M300 205 L300 175 M293 183 L300 175 L307 183" stroke="#ffd9a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M300 395 L300 425 M293 417 L300 425 L307 417" stroke="#ffd9a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M205 300 L175 300 M183 293 L175 300 L183 307" stroke="#ffd9a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M395 300 L425 300 M417 293 L425 300 L417 307" stroke="#ffd9a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </g>
                 </g>
 
@@ -447,7 +499,7 @@
                     Chúc Mừng Ngày Phụ Nữ Việt Nam 20/10
                 </span>
 
-                <h3 class="font-script text-4xl sm:text-5xl text-blush-500 font-bold mt-1 mb-4 drop-shadow-sm">
+                <h3 class="font-script shimmer-text text-4xl sm:text-5xl font-bold mt-1 mb-4">
                     Gửi <span class="recipient-inline">Min iu</span> của anh
                 </h3>
 
@@ -536,6 +588,7 @@
                     document.body.classList.toggle('scrolled', scrollTop > 30);
                     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
                     const progress = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
+                    nextBtn.classList.toggle('is-last', scrollTop > docHeight - 10);
                     document.documentElement.style.setProperty('--scroll-progress', `${progress}%`);
                     scrollTicking = false;
                 });
@@ -760,6 +813,13 @@
             }
         });
 
+        svgStage.addEventListener('touchstart', (e) => {
+            if (stageState !== 'IDLE' && stageState !== 'SPRING_RETURN') return;
+            const t = e.touches[0];
+            const pt = clientToSVGCoords(t.clientX, t.clientY);
+            if (Math.hypot(pt.x - handleX, pt.y - handleY) < 115 || Math.hypot(pt.x - CENTER_X, pt.y - CENTER_Y) < 115) e.preventDefault();
+        }, { passive: false });
+
         svgStage.addEventListener('pointermove', (e) => {
             if (stageState !== 'DRAGGING') return;
             const pt = clientToSVGCoords(e.clientX, e.clientY);
@@ -967,6 +1027,15 @@
             wheelLockUntil = performance.now() + 650;
         }, { passive: false });
 
+        // Điện thoại: bấm nút để cuộn tới neo kế tiếp (ở cuối trang thì quay về đầu)
+        const nextBtn = document.getElementById('next-btn');
+        nextBtn.addEventListener('click', () => {
+            const y = window.scrollY;
+            const next = getAnchors().find(v => v > y + 10);
+            wheelCurrent = y;
+            wheelTarget = next === undefined ? 0 : next;
+        });
+
         function stepWheelScroll(time) {
             const dt = Math.min(50, time - lastFrameT || 16);
             lastFrameT = time;
@@ -981,7 +1050,7 @@
 
         function updateScrollBlur() {
             const y = window.scrollY;
-            const target = Math.min(1, Math.abs(y - lastScrollY) * 0.14);
+            const target = Math.min(4, Math.abs(y - lastScrollY) * 0.14);
             lastScrollY = y;
             blurAmt += (target - blurAmt) * 0.12;
             const v = blurAmt < 0.05 ? '0px' : blurAmt.toFixed(2) + 'px';
@@ -1122,6 +1191,13 @@
                     handlePointerRelease();
                 }
             }, 22);
+        }
+
+        for (let i = 0; i < 60; i++) {
+            const st = document.createElement('div');
+            st.className = 'star';
+            st.style.cssText = `left:${Math.random()*100}vw;top:${Math.random()*100}vh;animation-delay:${Math.random()*3}s`;
+            document.body.appendChild(st);
         }
 
         window.addEventListener('resize', resizeCanvases);
